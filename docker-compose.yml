@@ -1,0 +1,12 @@
+version: "3"
+services:
+  app:
+    image: golang:1.21
+    ports:
+      - 8080:80
+    volumes:
+      - type: bind
+        source: "."
+        target: "/go/src/app"
+    tty: true
+    working_dir: /go/src/app/src
