@@ -1,26 +1,28 @@
 package main
 
-import "fmt"
+import (
+	"crypto/rand"
+	"fmt"
+	"math/big"
+)
 
 func main() {
-	repeat := func(
+	repeatFn := func(
 		done <-chan interface{},
-		values ...interface{},
+		fn func() interface{},
 	) <-chan interface{} {
-		valueStream := make(chan interface{})
+		repeatStream := make(chan interface{})
 		go func() {
-			defer close(valueStream)
+			defer close(repeatStream)
 			for {
-				for _, value := range values {
-					select {
-					case <-done:
-						return
-					case valueStream <- value:
-					}
+				select {
+				case <-done:
+					return
+				case repeatStream <- fn():
 				}
 			}
 		}()
-		return valueStream
+		return repeatStream
 	}
 
 	take := func(
@@ -44,7 +46,13 @@ func main() {
 
 	done := make(chan interface{})
 	defer close(done)
-	for value := range take(done, (repeat(done, 1)), 10) {
-		fmt.Println(value)
+
+	rand := func() interface{} {
+		n, _ := rand.Int(rand.Reader, big.NewInt(1000))
+		return n
+	}
+
+	for num := range take(done, repeatFn(done, rand), 10) {
+		fmt.Println(num)
 	}
 }
