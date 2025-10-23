@@ -77,6 +77,12 @@ func genFarewell(ctx context.Context) (string, error) {
 }
 
 func locale(ctx context.Context) (string, error) {
+	if deadline, ok := ctx.Deadline(); ok {
+		if deadline.Before(time.Now()) {
+			return "", context.DeadlineExceeded
+		}
+	}
+
 	select {
 	case <-ctx.Done():
 		return "", ctx.Err()
